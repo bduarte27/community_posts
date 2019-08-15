@@ -9,10 +9,17 @@ port = 8000
 Username = input("What is you username?: ")
 
 client_socket.connect((public_ip, port))
-
+client_socket.send(Username.encode('utf-8'))
 
 while True:
-
-    client_socket.send(Username.encode())
-
-
+    
+    x = input("Data to send? ")
+    
+    if x == '':
+        client_socket.close()
+        print("Connection is closed!")
+        break
+    else: 
+        client_socket.send(x.encode('utf-8'))
+        
+    print(client_socket.recv(1024).decode('utf-8'))
