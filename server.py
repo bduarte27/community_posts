@@ -40,8 +40,11 @@ def run_server():
             # accept and save new connections to socket_list and client_dictionary
             if read_socket == server_socket:
                 client_socket, client_address = server_socket.accept()
+
+                # Get the user_name data from the client
+                username_data = client_socket.recv(1024).decode('utf-8')
             
-                client_dictionary[read_socket] = client_address
+                client_dictionary[client_socket] = username_data
                 socket_list.append(client_socket)
 
             # recieve client messages
@@ -54,7 +57,6 @@ def run_server():
                     socket_list.remove(read_socket)
                     del client_dictionary[read_socket]
                     read_socket.close()
-                    
                     print("Connection closed!")
                     continue
 

@@ -12,7 +12,7 @@ client_socket.connect((public_ip, port))
 client_socket.send(Username.encode('utf-8'))
 
 while True:
-    
+
     x = input("Data to send? ")
     
     if x == '':
@@ -21,5 +21,3 @@ while True:
         break
     else: 
         client_socket.send(x.encode('utf-8'))
-        
-    print(client_socket.recv(1024).decode('utf-8'))
