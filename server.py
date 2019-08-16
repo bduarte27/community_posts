@@ -65,6 +65,12 @@ def run_server():
                 try:
                     message = read_socket.recv(1024)
                     message = message.decode('utf-8')
+                    print(message)
+
+                    if len(message) == 0:
+                        close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
+                        continue
+                    
                     if debug:
                         print(client_dictionary[read_socket] + ": " + message)
                     client_messages[client_dictionary[read_socket]] = message
