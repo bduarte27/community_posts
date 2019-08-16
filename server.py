@@ -7,12 +7,15 @@ SERVER_IP = socket.gethostbyname(socket.gethostname())
 PUBLIC_IP = '71.204.145.90'
 SERVER_PORT = 8000
 
+
+debug = True
+
 def run_server():
     global socket
-    
+
     # create server socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
+
     # setup server socket settings
     server_socket.bind((SERVER_IP, SERVER_PORT))
 
@@ -30,7 +33,7 @@ def run_server():
 
     # Key = client username, Value = latest client message
     client_messages = {}
-    
+
     # keep server running
     while True:
         # read_sockets = sockets with data to read from
@@ -46,33 +49,58 @@ def run_server():
 
                 # Get the user_name data from the client
                 username_data = client_socket.recv(1024).decode('utf-8')
-            
+
                 client_dictionary[client_socket] = username_data
                 client_messages[username_data] = ""
                 socket_list.append(client_socket)
 
             # recieve client messages
             else:
-                message = read_socket.recv(1024)
+                
+                if debug:
+                    print("\nTesting the proccess of the connection------\n")
+                    print("Usernames: ", client_dictionary.values(), f"<- Accessing {client_dictionary[read_socket]}")
+                    print("Current Connection: ", client_dictionary[read_socket])
 
-                # Remove and close the socket if client closed their connection
-                if len(message) == 0:
-                    print(f"Closing the socket for -> {client_dictionary[read_socket]}")
-                    socket_list.remove(read_socket)
-                    del client_dictionary[read_socket]
-                    read_socket.close()
-                    print("Connection closed!")
+                try:
+                    message = read_socket.recv(1024)
+
+                    # Print and save message
+                    if len(message) == 0:
+                        close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
+                        continue
+                    message = message.decode('utf-8')
+                    print(client_dictionary[read_socket] + ": " + message)
+                    client_messages[client_dictionary[read_socket]] = message
+                    
+                except ConnectionResetError:
+                    close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
                     continue
+                    
 
-                # Print and save message
-                message = message.decode('utf-8')
-                print(client_dictionary[read_socket] + ": " + message)
-                client_messages[client_dictionary[read_socket]] = message
+        for i in client_messages:
+            for write_socket in write_sockets:
+                if write_socket in socket_list and i != client_dictionary[write_socket] and client_messages[i] != "":
+                    msg = f"\nFrom Client -> {i}: {client_messages[i]}\n"
+                    # This line causes a bug on disconnecting to a server!
+                    write_socket.send(msg.encode("utf-8"))
+            client_messages[i] = ""
 
-        for write_socket in write_sockets:
-            if write_socket in socket_list and client_messages[client_dictionary[write_socket]] != "":
-                print(client_messages[client_dictionary[write_socket]])
-                client_messages[client_dictionary[write_socket]] = ""
+
+def close_clientLine(client_socket: "Client's socket", socket_list, client_dictionary, client_messages):
+    ''' '''
+    print(f"Closing the socket for -> {client_dictionary[client_socket]}")
+    socket_list.remove(client_socket)
+    # For now wer are also deleting the messages for testing purposes
+
+    if debug:
+        print("\nTesting the Closure of the connection------\n")
+        print("Usernames: ", client_dictionary.values(), f"<- Removing {client_dictionary[client_socket]}")                    
+
+    del client_messages[client_dictionary[client_socket]]
+    del client_dictionary[client_socket]
+    print("Connection closed!")
+    
 
 
 if __name__=='__main__':
