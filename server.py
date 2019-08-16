@@ -8,7 +8,7 @@ PUBLIC_IP = '71.204.145.90'
 SERVER_PORT = 8000
 
 
-debug = True
+debug = False
 
 def run_server():
     global socket
@@ -70,7 +70,8 @@ def run_server():
                         close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
                         continue
                     message = message.decode('utf-8')
-                    print(client_dictionary[read_socket] + ": " + message)
+                    if debug:
+                        print(client_dictionary[read_socket] + ": " + message)
                     client_messages[client_dictionary[read_socket]] = message
                     
                 except ConnectionResetError:
@@ -87,7 +88,8 @@ def run_server():
             client_messages[i] = ""
 
 
-def close_clientLine(client_socket: "Client's socket", socket_list, client_dictionary, client_messages):
+def close_clientLine(client_socket: "Client's socket", socket_list: 'list of socket',
+                     client_dictionary: 'dictionary of users', client_messages: 'dictionary of messages'):
     ''' '''
     print(f"Closing the socket for -> {client_dictionary[client_socket]}")
     socket_list.remove(client_socket)
