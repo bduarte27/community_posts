@@ -27,6 +27,9 @@ def run_server():
 
     # Key = client socket object, Value = client address tuple
     client_dictionary = {}
+
+    # Key = client username, Value = latest client message
+    client_messages = {}
     
     # keep server running
     while True:
@@ -45,6 +48,7 @@ def run_server():
                 username_data = client_socket.recv(1024).decode('utf-8')
             
                 client_dictionary[client_socket] = username_data
+                client_messages[username_data] = ""
                 socket_list.append(client_socket)
 
             # recieve client messages
@@ -63,6 +67,12 @@ def run_server():
                 # Print and save message
                 message = message.decode('utf-8')
                 print(client_dictionary[read_socket] + ": " + message)
+                client_messages[client_dictionary[read_socket]] = message
+
+        for write_socket in write_sockets:
+            if write_socket in socket_list and client_messages[client_dictionary[write_socket]] != "":
+                print(client_messages[client_dictionary[write_socket]])
+                client_messages[client_dictionary[write_socket]] = ""
 
 
 if __name__=='__main__':

@@ -2,13 +2,13 @@ import socket
 
 client_socket = socket.socket()
 
-server_ip = '192.168.0.110'
+server_ip = '127.0.1.1'
 public_ip = '71.204.145.90'
 port = 8000
 
 Username = input("What is you username?: ")
 
-client_socket.connect((public_ip, port))
+client_socket.connect((server_ip, port))
 client_socket.send(Username.encode('utf-8'))
 
 while True:
