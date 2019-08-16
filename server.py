@@ -79,13 +79,13 @@ def run_server():
                     continue
                     
 
-        for i in client_messages:
+        for each_user in client_messages:
             for write_socket in write_sockets:
-                if write_socket in socket_list and i != client_dictionary[write_socket] and client_messages[i] != "":
-                    msg = f"\nFrom Client -> {i}: {client_messages[i]}\n"
+                if write_socket in socket_list and each_user != client_dictionary[write_socket] and client_messages[each_user] != "":
+                    msg = f"\nFrom Client -> {each_user}: {client_messages[each_user]}\n"
                     # This line causes a bug on disconnecting to a server!
                     write_socket.send(msg.encode("utf-8"))
-            client_messages[i] = ""
+            client_messages[each_user] = ""
 
 
 def close_clientLine(client_socket: "Client's socket", socket_list: 'list of socket',

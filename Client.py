@@ -1,33 +1,46 @@
 import socket
 import select
 
-client_socket = socket.socket()
-
 server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
 port = 8000
 
-Username = input("What is you username?: ")
+def client_run():
+    global socket
+    
+    client_socket = socket.socket()
 
-client_socket.connect((server_ip, port))
+    Username = input("What is you username?: ")
 
-socket_list = [client_socket]
-client_socket.send(Username.encode('utf-8'))
+    client_socket.connect((server_ip, port))
 
-while True:
+    socket_list = [client_socket]
+    client_socket.send(Username.encode('utf-8'))
 
-    read_socket, write_socket, exception_socket = select.select(socket_list, socket_list, socket_list)
+    while True:
+
+        read_socket, write_socket, exception_socket = select.select(socket_list, socket_list, socket_list)
 
 
-    if read_socket:
-        print(read_socket[0].recv(1024).decode("utf-8"))
-        continue
+        if read_socket:
+            print(read_socket[0].recv(1024).decode("utf-8"))
+            continue
 
-    if write_socket:
-        x = input(f"{Username}: ")
-        if x == '':
-            client_socket.close()
-            print("Connection is closed!")
-            break
-        else: 
-            write_socket[0].send(x.encode('utf-8'))
+        if write_socket:
+            x = input(f"{Username} press Enter to see comment and 'CLOSE <Username>"
+                      +" to close connection: ")
+            if x == '':
+                continue
+            elif x.upper() == "CLOSE {Username}":
+                print(f"Closing connection for {Username}!" )
+                client_socket.close()
+                print(f"Connection Closed!")
+                break
+            else: 
+                write_socket[0].send(x.encode('utf-8'))
+
+
+
+
+if __name__ == '__main__':
+    client_run()
