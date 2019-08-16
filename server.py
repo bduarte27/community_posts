@@ -64,11 +64,6 @@ def run_server():
 
                 try:
                     message = read_socket.recv(1024)
-
-                    # Print and save message
-                    if len(message) == 0:
-                        close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
-                        continue
                     message = message.decode('utf-8')
                     if debug:
                         print(client_dictionary[read_socket] + ": " + message)

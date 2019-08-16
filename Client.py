@@ -27,17 +27,12 @@ def client_run():
             continue
 
         if write_socket:
-            x = input(f"{Username} press Enter to see comment and 'CLOSE <Username>"
-                      +" to close connection: ")
-            if x == '':
+            user_input = input(f"{Username} (Press Enter to refresh): ")
+
+            if user_input == "":
                 continue
-            elif x.upper() == "CLOSE {Username}":
-                print(f"Closing connection for {Username}!" )
-                client_socket.close()
-                print(f"Connection Closed!")
-                break
             else: 
-                write_socket[0].send(x.encode('utf-8'))
+                write_socket[0].send(user_input.encode('utf-8'))
 
 
 
