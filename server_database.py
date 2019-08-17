@@ -1,22 +1,19 @@
 import json
-
-DB_Path = '.\DB'
+from pathlib import Path
 
 class database_manager:
 
     def __init__(self):
         pass
 
-
     # Code for requesting data
 
     def request_events(self, zipcode: str):
         ''' Return list of events associated with specified zipcode '''
+        self._file_path = Path("DB") / Path(f"{zip_code}.json")
         events = []
 
-        # Open the file with the name zipcode and load the json object
-        with open(zipcode, "r") as json_file:
-            json_object = json.load(json_file)
+        json_object = self._load_data(file_path)
 
         # Add each event to events list
         for event in json_object.keys():
@@ -27,11 +24,10 @@ class database_manager:
 
     def request_messages(self, zipcode: str, event: str):
         ''' Return list of messages associated with the zipcode and event '''
-        # Open the file with the name zipcode and load the json object
-        with open(zipcode, "r") as json_file:
-            json_object = json.load(json_file)
+        self._file_path = Path("DB") / Path(f"{zip_code}.json")
 
-        # Return messages list from specific event
+        json_object = self._load_data(file_path)
+
         return json_object[event]
 
 
@@ -39,7 +35,7 @@ class database_manager:
 
     def add_zipcode(self, zip_code: str) -> None:
         ''' Add Zipcode in the json Database '''
-        file_path = f".\DB\{zip_code}.json"
+        file_path = Path("DB") / Path(f"{zip_code}.json")
         try:
             with open(file_path, "r") as json_file:
                 print("Already exist!")
@@ -50,8 +46,7 @@ class database_manager:
             
     def add_event(self, zip_code: str, event: str) -> None:
         ''' Add Event in the json Database '''
-        file_path = f".\DB\{zip_code}.json"
-        json_object = dict()
+        file_path = Path("DB") / Path(f"{zip_code}.json")
 
         json_object = self._load_data(file_path)
 
@@ -62,8 +57,7 @@ class database_manager:
         
     def add_message(self, zip_code: str, event: str, message: str) -> None:
         ''' Add Message in the json Database '''
-        file_path = f".\DB\{zip_code}.json"
-        json_object = dict()
+        file_path = Path("DB") / Path(f"{zip_code}.json")
         
         json_object = self._load_data(file_path)
 
