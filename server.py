@@ -8,8 +8,6 @@ PUBLIC_IP = '71.204.145.90'
 SERVER_PORT = 8000
 
 
-debug = False
-
 def run_server():
     global socket
 
@@ -57,11 +55,6 @@ def run_server():
             # recieve client messages
             else:
                 
-                if debug:
-                    print("\nTesting the proccess of the connection------\n")
-                    print("Usernames: ", client_dictionary.values(), f"<- Accessing {client_dictionary[read_socket]}")
-                    print("Current Connection: ", client_dictionary[read_socket])
-
                 try:
                     message = read_socket.recv(1024)
                     message = message.decode('utf-8')
@@ -70,8 +63,6 @@ def run_server():
                         close_clientLine(read_socket, socket_list, client_dictionary, client_messages)
                         continue
                     
-                    if debug:
-                        print(client_dictionary[read_socket] + ": " + message)
                     client_messages[client_dictionary[read_socket]] = message
                     
                 except ConnectionResetError:
@@ -93,11 +84,7 @@ def close_clientLine(client_socket: "Client's socket", socket_list: 'list of soc
     ''' '''
     print(f"Closing the socket for -> {client_dictionary[client_socket]}")
     socket_list.remove(client_socket)
-    # For now wer are also deleting the messages for testing purposes
-
-    if debug:
-        print("\nTesting the Closure of the connection------\n")
-        print("Usernames: ", client_dictionary.values(), f"<- Removing {client_dictionary[client_socket]}")                    
+    # For now we are also deleting the messages for testing purposes
 
     del client_messages[client_dictionary[client_socket]]
     del client_dictionary[client_socket]
