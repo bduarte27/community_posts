@@ -1,8 +1,27 @@
 import json
 
 class database_manager:
-    def request_messages():
+
+    def __init__(self):
         pass
 
-    def update_messages():
+
+    # Code for requesting data
+
+    def request_events(self):
+        pass
+
+    def request_messages(self):
+        pass
+
+
+    # Code for updating the database
+
+    def add_zipcode(self):
+        pass
+
+    def add_event(self):
+        pass
+
+    def add_message(self):
         pass
