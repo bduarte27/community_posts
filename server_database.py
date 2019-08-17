@@ -8,11 +8,30 @@ class database_manager:
 
     # Code for requesting data
 
-    def request_events(self):
-        pass
+    def request_events(self, zipcode: str):
+        ''' Return list of events associated with specified zipcode '''
+        events = []
 
-    def request_messages(self):
-        pass
+        # Open the file with the name zipcode and load the json object
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
+
+        # Add each event to events list
+        for event in json_object.keys():
+            events.append(event)
+
+        return events
+
+        
+
+    def request_messages(self, zipcode: str, event: str):
+        ''' Return list of messages associated with the zipcode and event '''
+        # Open the file with the name zipcode and load the json object
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
+
+        # Return messages list from specific event
+        return json_object[event]
 
 
     # Code for updating the database
@@ -20,8 +39,15 @@ class database_manager:
     def add_zipcode(self):
         pass
 
-    def add_event(self):
-        pass
+    def add_event(self, zipcode: str, event: str):
+        ''' Adds specified event to zipcode location '''
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
 
-    def add_message(self):
-        pass
+        json_object[event] = []
+
+    def add_message(self, zipcode: str, event: str, message: str):
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
+
+        json_object[event].append(message)
