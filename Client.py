@@ -31,7 +31,7 @@ def client_run():
             if user_input == "":
                 continue
             elif user_input == "EMPTY":
-                print("Closing Connection for {Username}!")
+                print(f"Closing Connection for {Username}!")
                 client_socket.close()
                 print("Connection Closed!")
                 break
