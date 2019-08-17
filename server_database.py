@@ -23,7 +23,6 @@ class database_manager:
             events.append(event)
 
         return events
-
         
 
     def request_messages(self, zipcode: str, event: str):
@@ -54,7 +53,7 @@ class database_manager:
         file_path = f".\DB\{zip_code}.json"
         json_object = dict()
 
-        self._load_data(file_path, json_object)
+        json_object = self._load_data(file_path)
 
         json_object[event] = []
 
@@ -66,20 +65,17 @@ class database_manager:
         file_path = f".\DB\{zip_code}.json"
         json_object = dict()
         
-        self._load_data(file_path, json_object)
-        print(json_object)
+        json_object = self._load_data(file_path)
 
         json_object[event].append(message)
 
         self._dump_data(file_path, json_object)
 
 
-    def _load_data(self, file_path: str, json_dict: dict) -> None:
-        ''' Load data to json file '''
+    def _load_data(self, file_path: str) -> dict:
+        ''' Load data to json file and return dictionary '''
         with open(file_path, "r") as json_file:
-            json_dict = json.load(json_file)
-            print(json_dict)
-        
+            return json.load(json_file)
 
 
     def _dump_data(self, file_path: str, data: dict) -> None:
