@@ -28,7 +28,7 @@ def run_server():
     print("Server running!")
     print(f"Server IP: {SERVER_IP} PUBLIC IP: {PUBLIC_IP} SERVER PORT: {SERVER_PORT}")
 
-    # Key = client socket object, Value = client address tuple
+    # Key = client socket object, Value = client username
     client_dictionary = {}
 
     # Key = client username, Value = latest client message
