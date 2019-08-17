@@ -10,11 +10,30 @@ class database_manager:
 
     # Code for requesting data
 
-    def request_events(self):
-        pass
+    def request_events(self, zipcode: str):
+        ''' Return list of events associated with specified zipcode '''
+        events = []
 
-    def request_messages(self):
-        pass
+        # Open the file with the name zipcode and load the json object
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
+
+        # Add each event to events list
+        for event in json_object.keys():
+            events.append(event)
+
+        return events
+
+        
+
+    def request_messages(self, zipcode: str, event: str):
+        ''' Return list of messages associated with the zipcode and event '''
+        # Open the file with the name zipcode and load the json object
+        with open(zipcode, "r") as json_file:
+            json_object = json.load(json_file)
+
+        # Return messages list from specific event
+        return json_object[event]
 
 
     # Code for updating the database
@@ -25,16 +44,17 @@ class database_manager:
         try:
             with open(file_path, "r") as json_file:
                 print("Already exist!")
-
+                
         except FileNotFoundError:
             self._dump_data(file_path, {})
+            
             
     def add_event(self, zip_code: str, event: str) -> None:
         ''' Add Event in the json Database '''
         file_path = f".\DB\{zip_code}.json"
         json_object = dict()
 
-        self._open_data(file_path, json_object)
+        self._load_data(file_path, json_object)
 
         json_object[event] = []
 
@@ -46,14 +66,14 @@ class database_manager:
         file_path = f".\DB\{zip_code}.json"
         json_object = dict()
         
-        self._open_data(file_path, json_object)
+        self._load_data(file_path, json_object)
 
         json_object[event].append(message)
 
         self._dump_data(file_path, json_object)
 
 
-    def _open_data(self, file_path: str, json_dict: dict) -> None:
+    def _load_data(self, file_path: str, json_dict: dict) -> None:
         with open(file_path, "r") as json_file:
             json_dict = json.load(json_file)
         
@@ -64,10 +84,3 @@ class database_manager:
         with open(file_path, "w") as json_file:
             json.dump(data, json_file)
 
-
-
-
-x = database_manager()
-x.add_zipcode("94533")
-x.add_event("94533", "Fight")
-x.add_message("94533", "Fight", "Hello")
