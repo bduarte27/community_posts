@@ -67,6 +67,7 @@ class database_manager:
         json_object = dict()
         
         self._load_data(file_path, json_object)
+        print(json_object)
 
         json_object[event].append(message)
 
@@ -74,8 +75,10 @@ class database_manager:
 
 
     def _load_data(self, file_path: str, json_dict: dict) -> None:
+        ''' Load data to json file '''
         with open(file_path, "r") as json_file:
             json_dict = json.load(json_file)
+            print(json_dict)
         
 
 
@@ -84,3 +87,9 @@ class database_manager:
         with open(file_path, "w") as json_file:
             json.dump(data, json_file)
 
+
+if __name__ == '__main__':
+    x = database_manager()
+    x.add_zipcode("94532")
+    x.add_event("94532", "Testing")
+    x.add_message("94532", "Testing", "WTF!")
