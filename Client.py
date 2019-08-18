@@ -18,7 +18,7 @@ def run_client():
     global socket
     running = True
 
-    client_info = {'username': '', 'zipcodie': '', 'event': ''}
+    client_info = {'username': '', 'zipcode': '', 'event': ''}
     
     client_socket = socket.socket()
 
@@ -28,14 +28,14 @@ def run_client():
     # connect client to server
     client_socket.connect((server_ip, port))
 
-    client_socket.send(username.encode('utf-8'))
+    client_socket.send(client_info['username'].encode('utf-8'))
 
     while running:
-        if client_info[zipcode] == '':
+        if client_info['zipcode'] == '':
             zipcode_mode(client_info)
-        if client_info[zipcode] != '' and client_info[event] == '':
+        if client_info['zipcode'] != '' and client_info['event'] == '':
             event_mode(client_socket, client_info)
-        if client_info[zipcode] != '' and client_info[event] != '':
+        if client_info['zipcode'] != '' and client_info['event'] != '':
             messaging_mode(client_socket, client_info)
 
 
@@ -56,14 +56,14 @@ def event_mode(client_socket: socket.socket, client_info):
 
         if response == 'ALL':
             # send request for events to server
-            client_socket.send(f'{zipcode} {response}'.encode('utf-8'))
-
-            # print list of events to client -> event_list size will vary, need make repetitive reads later
-            print(client_socket.recv(1024).decode('utf-8'))
+            client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
+#             Disable for now
+##            # print list of events to client -> event_list size will vary, need make repetitive reads later
+##            print(client_socket.recv(1024).decode('utf-8'))
 
         elif response[:4] == 'POST':
             # post new event to server at zipcode location
-            client_socket.send(f'{zipcode} {response}'.encode('utf-8'))
+            client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
 
         elif response[:3] == 'GET':
             # client will now move to messaging mode
