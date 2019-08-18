@@ -4,53 +4,119 @@ server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
 port = 8000
 
+'''
+Client will be in 1 of 3 modes
+- zipcode mode:
+    will enter zipcode location
+- event mode:
+    can request existing events, create new event, enter an event messaging catalogue, or return to zipcode mode
+- message mode:
+    can send messages or return to event mode
+'''
+
 def run_client():
     global socket
     running = True
+
+    client_info = {'username': '', 'zipcodie': '', 'event': ''}
     
     client_socket = socket.socket()
 
     # username required from client
-    username = input("What is your username?: ")
+    client_info['username'] = input("What is your username?: ")
 
     # connect client to server
     client_socket.connect((server_ip, port))
 
-    # make recv and send calls non blocking for client
-    client_socket.setblocking(0)
-
     client_socket.send(username.encode('utf-8'))
 
     while running:
-        recieve_message(client_socket)
-        running = post_message(client_socket, username)
+        if client_info[zipcode] == '':
+            zipcode_mode(client_info)
+        if client_info[zipcode] != '' and client_info[event] == '':
+            event_mode(client_socket, client_info)
+        if client_info[zipcode] != '' and client_info[event] != '':
+            messaging_mode(client_socket, client_info)
 
 
-def recieve_message(client_socket: socket.socket):
-    ''' Prints out messages posted from other clients '''
+def zipcode_mode(client_info):
+    ''' Update client_info to have specified zipcode '''
+    client_info['zipcode'] = input("What is your zipcode?: ")
+
+
+def event_mode(client_socket: socket.socket, client_info):
+    ''' Apply one of the specified options described below: ALL, POST, GET, BACK '''
+    print("ALL: to request all events")
+    print("POST event_name: where event_name is the name of the event to create a new event post")
+    print("GET event_name: where event_name is the name of the event to enter the event_name messaging catalogue")
+    print("BACK: to change location")
+
+    while True:
+        response = input("Enter your option here: ")
+
+        if response == 'ALL':
+            # send request for events to server
+            client_socket.send(f'{zipcode} {response}'.encode('utf-8'))
+
+            # print list of events to client -> event_list size will vary, need make repetitive reads later
+            print(client_socket.recv(1024).decode('utf-8'))
+
+        elif response[:4] == 'POST':
+            # post new event to server at zipcode location
+            client_socket.send(f'{zipcode} {response}'.encode('utf-8'))
+
+        elif response[:3] == 'GET':
+            # client will now move to messaging mode
+            client_info['event'] = response[4:]
+            break
+
+        elif response == 'BACK':
+            # client will now move back to zipcode mode
+            client_info['zipcode'] = ''
+            break
+
+
+def messaging_mode(client_socket: socket.socket, client_info):
+    """ 
+    1.) keep client updated with messages
+    2.) allow client to send messages OR return to event mode
+    """
+    print(f'Welcome to the {client_info[event]} event message board')
+    print('Type BACK to return to event mode any time')
+
+    # send request for messages from specified event
+    client_socket.send(f'{client_info[zipcode]} GET {client_info[event]}'.encode('utf-8'))
+
+    # Print out all messages from specified event catalogue -> message_list size will vary, need make repetitive reads later
+    print(client_socket.recv(1024).decode('utf-8'))
+
+    while True:
+        response = input('Enter your message: ')
+        
+        if response == 'BACK':
+            # client will now move back to event mode
+            client_info['event'] = ''
+            break
+        
+        # client must wait till server returns message_list
+        client_socket.send(f'{client_info[zipcode]} {client_info[event]} {response}')
+
+        _recieve_data_nonblocking(client_socket)
+
+
+
+def _recieve_data_nonblocking(client_socket: socket.socket):
+    ''' Returns data requested from server '''
+    client_socket.setblocking(0)
+
     # recv will raise BlockingIOError if there is nothing to recieve
     try:
-        print(client_socket.recv(1024).decode('utf-8'))
+        return client_socket.recv(1024).decode('utf-8')
     except BlockingIOError:
         pass
 
+    client_socket.setblocking(1)
 
-def post_message(client_socket: socket.socket, username: str):
-    ''' Sends message to other clients '''
-    user_input = input(f"{username} (Press Enter to refresh and 'EMPTY' to close): ")
-
-    if user_input == "":
-        pass
-    elif user_input == "EMPTY":
-        print(f"Closing Connection for {username}!")
-        client_socket.close()
-        print("Connection Closed!")
-        return False
-    else: 
-        # send will return an exception if it blocks
-        client_socket.send(user_input.encode('utf-8'))
-    
-    return True
 
 
 if __name__ == '__main__':
