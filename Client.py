@@ -6,6 +6,7 @@ port = 8000
 
 def run_client():
     global socket
+    running = True
     
     client_socket = socket.socket()
 
@@ -20,9 +21,9 @@ def run_client():
 
     client_socket.send(username.encode('utf-8'))
 
-    while True:
+    while running:
         recieve_message(client_socket)
-        post_message(client_socket, username)
+        running = post_message(client_socket, username)
 
 
 def recieve_message(client_socket: socket.socket):
@@ -44,9 +45,12 @@ def post_message(client_socket: socket.socket, username: str):
         print(f"Closing Connection for {username}!")
         client_socket.close()
         print("Connection Closed!")
+        return False
     else: 
         # send will return an exception if it blocks
         client_socket.send(user_input.encode('utf-8'))
+    
+    return True
 
 
 if __name__ == '__main__':
