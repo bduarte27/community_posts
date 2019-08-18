@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+class ObjectAlreadyExist(Exception):
+    pass
+
 class Database_Manager:
 
     def __init__(self):
@@ -8,9 +11,9 @@ class Database_Manager:
 
     # Code for requesting data
 
-    def request_events(self, zipcode: str):
+    def request_events(self, zip_code: str):
         ''' Return list of events associated with specified zipcode '''
-        self._file_path = Path("DB") / Path(f"{zip_code}.json")
+        file_path = Path("DB") / Path(f"{zip_code}.json")
         events = []
 
         json_object = self._load_data(file_path)
@@ -22,9 +25,9 @@ class Database_Manager:
         return events
         
 
-    def request_messages(self, zipcode: str, event: str):
+    def request_messages(self, zip_code: str, event: str):
         ''' Return list of messages associated with the zipcode and event '''
-        self._file_path = Path("DB") / Path(f"{zip_code}.json")
+        file_path = Path("DB") / Path(f"{zip_code}.json")
 
         json_object = self._load_data(file_path)
 
@@ -50,9 +53,12 @@ class Database_Manager:
 
         json_object = self._load_data(file_path)
 
-        json_object[event] = []
-
-        self._dump_data(file_path, json_object)
+        if event not in json_object:
+            json_object[event] = []
+            self._dump_data(file_path, json_object)
+        else:
+            raise ObjectAlreadyExist()
+        
 
         
     def add_message(self, zip_code: str, event: str, message: str) -> None:
