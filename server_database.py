@@ -15,14 +15,18 @@ class Database_Manager:
         ''' Return list of events associated with specified zipcode '''
         file_path = Path("DB") / Path(f"{zip_code}.json")
         events = []
+        try:
+            json_object = self._load_data(file_path)
 
-        json_object = self._load_data(file_path)
+            # Add each event to events list
+            for event in json_object.keys():
+                events.append(event)
 
-        # Add each event to events list
-        for event in json_object.keys():
-            events.append(event)
+            return events
 
-        return events
+        except FileNotFoundError:
+            self._dump_data(file_path, {})
+            return events
         
 
     def request_messages(self, zip_code: str, event: str):

@@ -39,6 +39,7 @@ def run_server():
             else:
                 try:
                     message = read_socket.recv(1024).decode('utf-8')
+                    # I don't think this is needed anymore with the current Client right now
                     if len(message) == 0:
                         close_clientLine(read_socket, socket_list, client_data)
                         continue
@@ -62,10 +63,8 @@ def clientCommands_RCVed(client_command: "Client Input", client_data: "Client Di
     message_data = client_command.split()
     
     if message_data[1] == "ALL":
-        # Create a message for all possible Commands
         return get_ALLEvents(message_data[0])
     elif message_data[1] == "POST":
-        print(message_data)
         return post_Event(message_data[0], message_data[2])
     
     else:
@@ -77,18 +76,20 @@ def clientCommands_RCVed(client_command: "Client Input", client_data: "Client Di
 def get_ALLEvents(zip_code: str) -> str:
     ''' get all Events as str and return as msg '''
     allEvents = db.request_events(zip_code)
-    print(allEvents)
-    msg = "".join(f"\n{i+1}.) {allEvents[i]}\n" for i in range(len(allEvents)))
-    return msg
+    if allEvents != []:
+        msg = "".join(f"\n{i+1}.) {allEvents[i]}\n" for i in range(len(allEvents)))
+        return msg
+    else:
+        return f"\nNo Events exist in this current ZipCode -> {zip_code}\n"
 
 
 def post_Event(zip_code: str, event_name: str) -> str:
     ''' Post Event on the DB -> Creating a meessage of completion '''
     try:
         db.add_event(zip_code, event_name)
-        return f"{event_name} Added in {zip_code}!"
+        return f"\n{event_name} Added in {zip_code}!\n"
     except server_database.ObjectAlreadyExist:
-        return f"{event_name} in {zip_code}... Already Exist!"
+        return f"\n{event_name} in {zip_code}... Already Exist!\n"
         
 
 def clientInfo_recv(client_socket: "Client's socket connection", client_data: 'Client Dictionary',
