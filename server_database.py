@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-class database_manager:
+class Database_Manager:
 
     def __init__(self):
         pass
@@ -79,7 +79,7 @@ class database_manager:
 
 
 if __name__ == '__main__':
-    x = database_manager()
+    x = Database_Manager()
     x.add_zipcode("94532")
     x.add_event("94532", "Testing")
     x.add_message("94532", "Testing", "WTF!")

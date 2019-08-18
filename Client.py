@@ -1,42 +1,45 @@
 import socket
-import select
 
 server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
 port = 8000
 
-def client_run():
+def run_client():
     global socket
     
     client_socket = socket.socket()
 
-    Username = input("What is you username?: ")
+    # username required from client
+    username = input("What is your username?: ")
 
+    # connect client to server
     client_socket.connect((server_ip, port))
 
-    socket_list = [client_socket]
-    client_socket.send(Username.encode('utf-8'))
+    # make recv and send calls non blocking for client
+    client_socket.setblocking(0)
+
+    client_socket.send(username.encode('utf-8'))
 
     while True:
+        # recv will raise BlockingIOError if there is nothing to recieve
+        try:
+            print(client_socket.recv(1024).decode('utf-8'))
+        except BlockingIOError:
+            pass
 
-        read_socket, write_socket, exception_socket = select.select(socket_list, socket_list, socket_list)
+        user_input = input(f"{username} (Press Enter to refresh and 'EMPTY' to close): ")
 
-        if read_socket:
-            print(read_socket[0].recv(1024).decode("utf-8"))
+        if user_input == "":
             continue
+        elif user_input == "EMPTY":
+            print(f"Closing Connection for {username}!")
+            client_socket.close()
+            print("Connection Closed!")
+            break
+        else: 
+            # send will return an exception if it blocks
+            client_socket.send(user_input.encode('utf-8'))
 
-        if write_socket:
-            user_input = input(f"{Username} (Press Enter to refresh and 'EMPTY' to close): ")
-
-            if user_input == "":
-                continue
-            elif user_input == "EMPTY":
-                print(f"Closing Connection for {Username}!")
-                client_socket.close()
-                print("Connection Closed!")
-                break
-            else: 
-                write_socket[0].send(user_input.encode('utf-8'))
 
 if __name__ == '__main__':
-    client_run()
+    run_client()
