@@ -21,24 +21,32 @@ def run_client():
     client_socket.send(username.encode('utf-8'))
 
     while True:
-        # recv will raise BlockingIOError if there is nothing to recieve
-        try:
-            print(client_socket.recv(1024).decode('utf-8'))
-        except BlockingIOError:
-            pass
+        recieve_message(client_socket)
+        post_message(client_socket, username)
 
-        user_input = input(f"{username} (Press Enter to refresh and 'EMPTY' to close): ")
 
-        if user_input == "":
-            continue
-        elif user_input == "EMPTY":
-            print(f"Closing Connection for {username}!")
-            client_socket.close()
-            print("Connection Closed!")
-            break
-        else: 
-            # send will return an exception if it blocks
-            client_socket.send(user_input.encode('utf-8'))
+def recieve_message(client_socket: socket.socket):
+    ''' Prints out messages posted from other clients '''
+    # recv will raise BlockingIOError if there is nothing to recieve
+    try:
+        print(client_socket.recv(1024).decode('utf-8'))
+    except BlockingIOError:
+        pass
+
+
+def post_message(client_socket: socket.socket, username: str):
+    ''' Sends message to other clients '''
+    user_input = input(f"{username} (Press Enter to refresh and 'EMPTY' to close): ")
+
+    if user_input == "":
+        pass
+    elif user_input == "EMPTY":
+        print(f"Closing Connection for {username}!")
+        client_socket.close()
+        print("Connection Closed!")
+    else: 
+        # send will return an exception if it blocks
+        client_socket.send(user_input.encode('utf-8'))
 
 
 if __name__ == '__main__':
