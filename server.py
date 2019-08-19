@@ -44,11 +44,7 @@ def run_server():
                         close_client(read_socket, socket_list, client_data)
                         continue
 
-                    response = process_client_request(client_request, client_data, read_socket)
-
-                    for write_socket in write_sockets:
-                        if write_socket == read_socket:
-                            write_socket.send(response.encode('utf-8'))
+                    process_client_request(client_request, client_data, read_socket)
                     
                 except ConnectionResetError:
                     close_client(read_socket, socket_list, client_data)
@@ -56,18 +52,25 @@ def run_server():
                 
 
 def process_client_request(client_request: "request from client application", client_data: "Client Dictionary",
-                         read_socket: "client socket") -> str:
+                         client_socket: "client socket"):
     ''' parse client request and decide on action to take '''
     request_data = client_request.split()
  
     if request_data[1] == "GOTO":
         db.add_zipcode(request_data[0])
+
     elif request_data[1] == "ALL":
-        return get_events(request_data[0])
+        all_events = get_events(request_data[0])
+        client_socket.send(all_events.encode('utf-8'))
+
     elif request_data[1] == "POST":
-        return post_event(request_data[0], request_data[2])
+        notification = post_event(request_data[0], request_data[2])
+        client_socket.send(notification.encode('utf-8'))
+
     elif request_data[1] == "GET":
-        return get_allMessage(request_data[0], request_data[2])
+        all_messages = get_messages(request_data[0], request_data[2])
+        client_socket.send(all_messages.encode('utf-8'))
+
     else:
         print(request_data)
 
@@ -90,10 +93,10 @@ def get_messages(zip_code: str, event: str) -> str:
     try:
         msg_list = db.request_messages(zip_code, event)
 
-        if list_msg == []:
+        if msg_list == []:
             return f"There are no current messages in this -> '{event}'"
         else:
-            return "".join(f"\n{i+1}.) {list_msg[i]}\n" for i in range(len(list_msg)))
+            return "".join(f"\n{i+1}.) {msg_list[i]}\n" for i in range(len(msg_list)))
     except KeyError:
         return "NO_EVENT"
 
@@ -109,9 +112,9 @@ def server_recv_client(server_socket: socket.socket, client_data: 'client dictio
 def close_client(client_socket: socket.socket, socket_list: 'list of all sockets',
                      client_data: 'client dictionary'):
     ''' close connection to client by removing from socket_list and client_dictionary '''
-    print(f"Closing the socket for -> {client_dictionary[client_socket]}")
+    print(f"Closing the socket for -> {client_data[client_socket]}")
     socket_list.remove(client_socket)
-    del client_dictionary[client_socket]
+    del client_data[client_socket]
     print("Connection closed!")
 
 

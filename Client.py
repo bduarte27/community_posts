@@ -45,7 +45,7 @@ def zipcode_mode(client_info, client_socket):
     ''' Update client_info to have specified zipcode '''
     client_info['zipcode'] = input("What is your zipcode?: ")
     client_socket.send(f"{client_info['zipcode']} GOTO".encode('utf-8'))
-    print(client_socket.recv(1024).decode('utf-8'))
+    #print(client_socket.recv(1024).decode('utf-8'))
 
     
 def event_mode(client_socket: socket.socket, client_info):
@@ -62,8 +62,8 @@ def event_mode(client_socket: socket.socket, client_info):
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
 
             # print list of events to client -> event_list size will vary, need make repetitive reads later
-
-            print(client_socket.recv(1024).decode('utf-8'))
+            all_events = client_socket.recv(1024).decode('utf-8')
+            print(json.loads(all_events))
 
         elif response[:4] == 'POST':
             # post new event to server at zipcode location
@@ -109,7 +109,7 @@ def messaging_mode(client_socket: socket.socket, client_info):
             break
         
         # client must wait till server returns message_list
-        client_socket.send(f"{client_info['zipcode']} {client_info['event']} {response}")
+        client_socket.send(f"{client_info['zipcode']} {client_info['event']} {response}".encode('utf-8'))
 
         _recieve_data_nonblocking(client_socket)
 
