@@ -1,4 +1,5 @@
 import socket
+import select
 
 server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
@@ -32,25 +33,26 @@ def run_client():
 
     while running:
         if client_info['zipcode'] == '':
-            zipcode_mode(client_info)
+            zipcode_mode(client_info, client_socket)
         if client_info['zipcode'] != '' and client_info['event'] == '':
             event_mode(client_socket, client_info)
         if client_info['zipcode'] != '' and client_info['event'] != '':
             messaging_mode(client_socket, client_info)
 
 
-def zipcode_mode(client_info):
+def zipcode_mode(client_info, client_socket):
     ''' Update client_info to have specified zipcode '''
     client_info['zipcode'] = input("What is your zipcode?: ")
+    client_socket.send(f"{client_info['zipcode']} GOTO".encode('utf-8'))
+    print(client_socket.recv(1024).decode('utf-8'))
 
-
+    
 def event_mode(client_socket: socket.socket, client_info):
     ''' Apply one of the specified options described below: ALL, POST, GET, BACK '''
     print("ALL: to request all events")
     print("POST event_name: where event_name is the name of the event to create a new event post")
     print("GET event_name: where event_name is the name of the event to enter the event_name messaging catalogue")
-    print("BACK: to change location")
-
+    print("BACK: to change location\n")
     while True:
         response = input("Enter your option here: ")
 
@@ -58,12 +60,13 @@ def event_mode(client_socket: socket.socket, client_info):
             # send request for events to server
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
 #             Disable for now
-##            # print list of events to client -> event_list size will vary, need make repetitive reads later
-##            print(client_socket.recv(1024).decode('utf-8'))
+            # print list of events to client -> event_list size will vary, need make repetitive reads later
+            print(client_socket.recv(1024).decode('utf-8'))
 
         elif response[:4] == 'POST':
             # post new event to server at zipcode location
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
+            print(client_socket.recv(1024).decode('utf-8'))
 
         elif response[:3] == 'GET':
             # client will now move to messaging mode
@@ -81,14 +84,19 @@ def messaging_mode(client_socket: socket.socket, client_info):
     1.) keep client updated with messages
     2.) allow client to send messages OR return to event mode
     """
-    print(f'Welcome to the {client_info[event]} event message board')
-    print('Type BACK to return to event mode any time')
-
     # send request for messages from specified event
-    client_socket.send(f'{client_info[zipcode]} GET {client_info[event]}'.encode('utf-8'))
+    client_socket.send(f"{client_info['zipcode']} GET {client_info['event']}".encode('utf-8'))
+    all_messages = client_socket.recv(1024).decode('utf-8')
+    print("\n",all_messages, "\n")
 
+    if all_messages == "NO_EVENT":
+        print("Going back to event mode!\n")
+        client_info['event'] = ''
+        return
+
+    print(f"Welcome to the {client_info['event']} event message board")
+    print('Type BACK to return to event mode any time')
     # Print out all messages from specified event catalogue -> message_list size will vary, need make repetitive reads later
-    print(client_socket.recv(1024).decode('utf-8'))
 
     while True:
         response = input('Enter your message: ')
@@ -99,7 +107,7 @@ def messaging_mode(client_socket: socket.socket, client_info):
             break
         
         # client must wait till server returns message_list
-        client_socket.send(f'{client_info[zipcode]} {client_info[event]} {response}')
+        client_socket.send(f"{client_info['zipcode']} {client_info['event']} {response}")
 
         _recieve_data_nonblocking(client_socket)
 

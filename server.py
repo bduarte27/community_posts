@@ -43,53 +43,66 @@ def run_server():
                     if len(message) == 0:
                         close_clientLine(read_socket, socket_list, client_data)
                         continue
-                    print(clientCommands_RCVed(message, client_data, read_socket))
+                    msg = clientCommands_RCVed(message, client_data, read_socket)
+
+                    for write_socket in write_sockets:
+                        if write_socket == read_socket:
+                            write_socket.send(msg.encode('utf-8'))
 
                     
                 except ConnectionResetError:
                     close_clientLine(read_socket, socket_list, client_data)
                     continue
-
-        
-##        for write_socket in write_sockets:
-##            client_zipCode = client_data[write_socket][1]
-##            all_events = db.request_events(client_zipCode)
-##            msg = f"\nFrom Client->"
-            
+                
 
 def clientCommands_RCVed(client_command: "Client Input", client_data: "Client Dictionary",
                          read_socket: "Client's Socket") -> str:
     ''' '''
     message_data = client_command.split()
-    
-    if message_data[1] == "ALL":
-        return get_ALLEvents(message_data[0])
+
+    # Create's the zipcode database if it doesn't exist
+    if message_data[1] == "GOTO":
+        db.add_zipcode(message_data[0])
+        return f"\nLocation: '{message_data[0]}' able to access!\n"
+    elif message_data[1] == "ALL":
+        return get_allEvents(message_data[0])
     elif message_data[1] == "POST":
         return post_Event(message_data[0], message_data[2])
-    
+    elif message_data[1] == "GET":
+        return get_allMessage(message_data[0], message_data[2])
     else:
         # Message System -> User has to attached to a zipcode and event in order to send message to the system
-        pass
+        print(message_data)
 
 
 
-def get_ALLEvents(zip_code: str) -> str:
+def get_allEvents(zip_code: str) -> str:
     ''' get all Events as str and return as msg '''
     allEvents = db.request_events(zip_code)
     if allEvents != []:
         msg = "".join(f"\n{i+1}.) {allEvents[i]}\n" for i in range(len(allEvents)))
         return msg
     else:
-        return f"\nNo Events exist in this current ZipCode -> {zip_code}\n"
+        return f"\nNo Events exist in this current ZipCode -> '{zip_code}'\n"
 
 
 def post_Event(zip_code: str, event_name: str) -> str:
     ''' Post Event on the DB -> Creating a meessage of completion '''
     try:
         db.add_event(zip_code, event_name)
-        return f"\n{event_name} Added in {zip_code}!\n"
+        return f"\nEvent: '{event_name}' added in Location: '{zip_code}'!\n"
     except server_database.ObjectAlreadyExist:
-        return f"\n{event_name} in {zip_code}... Already Exist!\n"
+        return f"\n'{event_name}' in '{zip_code}'... Already Exist!\n"
+
+def get_allMessage(zip_code: str, event: str) -> str:
+    try:
+        list_msg = db.request_messages(zip_code, event)
+        if list_msg == []:
+            return f"There are no current messages in this -> '{event}'"
+        else:
+            return "".join(f"\n{i+1}.) {list_msg[i]}\n" for i in range(len(list_msg)))
+    except KeyError:
+        return "NO_EVENT"
         
 
 def clientInfo_recv(client_socket: "Client's socket connection", client_data: 'Client Dictionary',

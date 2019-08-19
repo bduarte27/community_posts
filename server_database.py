@@ -11,33 +11,30 @@ class Database_Manager:
 
     # Code for requesting data
 
-    def request_events(self, zip_code: str):
+    def request_events(self, zip_code: str) -> [str]:
         ''' Return list of events associated with specified zipcode '''
         file_path = Path("DB") / Path(f"{zip_code}.json")
         events = []
-        try:
-            json_object = self._load_data(file_path)
-
-            # Add each event to events list
-            for event in json_object.keys():
-                events.append(event)
-
-            return events
-
-        except FileNotFoundError:
-            self._dump_data(file_path, {})
-            return events
-        
-
-    def request_messages(self, zip_code: str, event: str):
-        ''' Return list of messages associated with the zipcode and event '''
-        file_path = Path("DB") / Path(f"{zip_code}.json")
 
         json_object = self._load_data(file_path)
 
-        return json_object[event]
+        # Add each event to events list
+        for event in json_object.keys():
+            events.append(event)
+
+        return events
 
 
+    def request_messages(self, zip_code: str, event: str) -> [str]:
+        ''' Return list of messages associated with the zipcode and event '''
+        try:
+            file_path = Path("DB") / Path(f"{zip_code}.json")
+            json_object = self._load_data(file_path)
+            return json_object[event]
+        except KeyError:
+            raise KeyError
+
+            
     # Code for updating the database
 
     def add_zipcode(self, zip_code: str) -> None:
@@ -45,8 +42,7 @@ class Database_Manager:
         file_path = Path("DB") / Path(f"{zip_code}.json")
         try:
             with open(file_path, "r") as json_file:
-                print("Already exist!")
-                
+                return
         except FileNotFoundError:
             self._dump_data(file_path, {})
             
