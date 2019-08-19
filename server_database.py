@@ -5,10 +5,6 @@ class EventAlreadyExist(Exception):
     pass
 
 class Database_Manager:
-
-    def __init__(self):
-        pass
-
     # Code for requesting data
 
     def request_events(self, zip_code: str) -> [str]:

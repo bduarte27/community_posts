@@ -1,17 +1,17 @@
+from server_database import Database_Manager, EventAlreadyExist
 import socket
 import select
-import server_database
 import json
 
 # server location
 SERVER_IP = socket.gethostbyname(socket.gethostname())
 PUBLIC_IP = '71.204.145.90'
 SERVER_PORT = 8000
+db = Database_Manager()
 
 
 def run_server():
     global socket
-    db = server_database.Database_Manager()
     
     # create server socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,7 +59,7 @@ def process_client_request(client_request: "request from client application", cl
                          read_socket: "client socket") -> str:
     ''' parse client request and decide on action to take '''
     request_data = client_request.split()
-    
+ 
     if request_data[1] == "GOTO":
         db.add_zipcode(request_data[0])
     elif request_data[1] == "ALL":
@@ -83,12 +83,13 @@ def post_event(zip_code: str, event_name: str) -> str:
     try:
         db.add_event(zip_code, event_name)
         return f"\n{event_name} Added in {zip_code}!\n"
-    except server_database.EventAlreadyExist:
+    except EventAlreadyExist:
         return f"\n{event_name} in {zip_code}... Already Exist!\n"
 
-def get_allMessage(zip_code: str, event: str) -> str:
+def get_messages(zip_code: str, event: str) -> str:
     try:
-        list_msg = db.request_messages(zip_code, event)
+        msg_list = db.request_messages(zip_code, event)
+
         if list_msg == []:
             return f"There are no current messages in this -> '{event}'"
         else:

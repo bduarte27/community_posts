@@ -1,5 +1,6 @@
 import socket
 import select
+import json
 
 server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
@@ -59,8 +60,9 @@ def event_mode(client_socket: socket.socket, client_info):
         if response == 'ALL':
             # send request for events to server
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
-#             Disable for now
+
             # print list of events to client -> event_list size will vary, need make repetitive reads later
+
             print(client_socket.recv(1024).decode('utf-8'))
 
         elif response[:4] == 'POST':
