@@ -20,7 +20,7 @@ def run_client():
     global socket
     running = True
 
-    client_info = {'username': '', 'zipcode': '', 'event': ''}
+    client_info = {'username': '', 'zipcode': '', 'event': '', 'num_of_messages': 0}
     
     client_socket = socket.socket()
 
@@ -87,14 +87,22 @@ def messaging_mode(client_socket: socket.socket, client_info):
     2.) allow client to send messages OR return to event mode
     """
     # send request for messages from specified event
-    client_socket.send(f"{client_info['zipcode']} GET {client_info['event']}".encode('utf-8'))
-    all_messages = client_socket.recv(1024).decode('utf-8')
-    print("\n",all_messages, "\n")
-
-    if all_messages == "NO_EVENT":
+    client_socket.send(f"{client_info['zipcode']} GET {client_info['event']} {client_info['num_of_messages']}".encode('utf-8'))
+    data_str = client_socket.recv(1024).decode('utf-8')
+    
+    if data_str == "NO_EVENT":
         print("Going back to event mode!\n")
         client_info['event'] = ''
+        client_info['num_of_messages'] = 0
         return
+
+    messagesList = json.loads(data_str)
+    print("\n",messagesList, "\n")
+    client_info['num_of_messages'] = len(messagesList)
+
+    
+
+
 
     print(f"Welcome to the {client_info['event']} event message board")
     print('Type BACK to return to event mode any time')
@@ -106,26 +114,15 @@ def messaging_mode(client_socket: socket.socket, client_info):
         if response == 'BACK':
             # client will now move back to event mode
             client_info['event'] = ''
+            client_info['num_of_messages'] = 0
             break
         
         # client must wait till server returns message_list
-        client_socket.send(f"{client_info['zipcode']} {client_info['event']} {response}")
+        client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {response}".encode('utf-8'))
 
-        _recieve_data_nonblocking(client_socket)
-
-
-
-def _recieve_data_nonblocking(client_socket: socket.socket):
-    ''' Returns data requested from server '''
-    client_socket.setblocking(0)
-
-    # recv will raise BlockingIOError if there is nothing to recieve
-    try:
-        return client_socket.recv(1024).decode('utf-8')
-    except BlockingIOError:
-        pass
-
-    client_socket.setblocking(1)
+        messageList = json.loads(client_socket.recv(1024).decode('utf-8'))      
+        print(messageList)
+        client_info['num_of_messages'] += len(messageList)
 
 
 

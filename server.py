@@ -62,14 +62,21 @@ def process_client_request(client_request: "request from client application", cl
  
     if request_data[1] == "GOTO":
         db.add_zipcode(request_data[0])
+        return f"Location: {request_data[0]} connected!"
     elif request_data[1] == "ALL":
         return get_events(request_data[0])
     elif request_data[1] == "POST":
         return post_event(request_data[0], request_data[2])
     elif request_data[1] == "GET":
-        return get_allMessage(request_data[0], request_data[2])
+        return get_messages(request_data[0], request_data[2], int(request_data[3]))
+    elif request_data[1] == "MESSAGES":
+        print(request_data[3])
+        message_list = request_data[4:]
+        msg = " ".join(f"{i}" for i in message_list)
+        db.add_message(request_data[0], request_data[2], msg)
+        return get_messages(request_data[0], request_data[2], int(request_data[3]))
     else:
-        print(request_data)
+        pass
 
 
 def get_events(zip_code: str) -> str:
@@ -86,14 +93,11 @@ def post_event(zip_code: str, event_name: str) -> str:
     except EventAlreadyExist:
         return f"\n{event_name} in {zip_code}... Already Exist!\n"
 
-def get_messages(zip_code: str, event: str) -> str:
+def get_messages(zip_code: str, event: str, number_of_messages: int) -> str:
     try:
-        msg_list = db.request_messages(zip_code, event)
-
-        if list_msg == []:
-            return f"There are no current messages in this -> '{event}'"
-        else:
-            return "".join(f"\n{i+1}.) {list_msg[i]}\n" for i in range(len(list_msg)))
+        msg_list = db.request_messages(zip_code, event, number_of_messages)
+        return json.dumps(msg_list)
+    
     except KeyError:
         return "NO_EVENT"
 
@@ -109,15 +113,11 @@ def server_recv_client(server_socket: socket.socket, client_data: 'client dictio
 def close_client(client_socket: socket.socket, socket_list: 'list of all sockets',
                      client_data: 'client dictionary'):
     ''' close connection to client by removing from socket_list and client_dictionary '''
-    print(f"Closing the socket for -> {client_dictionary[client_socket]}")
+    print(f"Closing the socket for -> {client_data[client_socket]}")
     socket_list.remove(client_socket)
-    del client_dictionary[client_socket]
+    del client_data[client_socket]
     print("Connection closed!")
 
-
-def message_test(message_data: str, client_data) -> str:
-    pass
-    
 
 
 def server_init(server_socket: 'Server Socket') -> None:

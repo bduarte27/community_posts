@@ -21,12 +21,12 @@ class Database_Manager:
         return events
 
 
-    def request_messages(self, zip_code: str, event: str) -> [str]:
+    def request_messages(self, zip_code: str, event: str, number_of_messages: int) -> [str]:
         ''' Return list of messages associated with the zipcode and event '''
         try:
             file_path = Path("DB") / Path(f"{zip_code}.json")
             json_object = self._load_data(file_path)
-            return json_object[event]
+            return json_object[event][number_of_messages:]
         except KeyError:
             raise KeyError
 
@@ -53,7 +53,7 @@ class Database_Manager:
             json_object[event] = []
             self._dump_data(file_path, json_object)
         else:
-            raise ObjectAlreadyExist()
+            raise EventAlreadyExist()
         
 
         
