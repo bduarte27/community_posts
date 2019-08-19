@@ -73,7 +73,8 @@ def process_client_request(client_request: "request from client application", cl
         
     elif request_data[1] == "MESSAGES":
         message_list = request_data[4:]
-        msg = " ".join(f"{i}" for i in message_list)
+        user_name = client_data[client_socket] + ": "
+        msg = user_name + " ".join(f"{i}" for i in message_list)
         db.add_message(request_data[0], request_data[2], msg)
         all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
         client_socket.send(all_messages.encode('utf-8'))
