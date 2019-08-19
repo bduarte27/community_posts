@@ -1,6 +1,7 @@
 import socket
 import select
 import server_database
+import json
 
 # server location
 SERVER_IP = socket.gethostbyname(socket.gethostname())
@@ -42,39 +43,40 @@ def run_server():
                     if len(client_request) == 0:
                         close_client(read_socket, socket_list, client_data)
                         continue
-                    print(process_client_request(client_request, client_data, read_socket))
 
+                    response = process_client_request(client_request, client_data, read_socket)
+
+                    for write_socket in write_sockets:
+                        if write_socket == read_socket:
+                            write_socket.send(response.encode('utf-8'))
                     
                 except ConnectionResetError:
                     close_client(read_socket, socket_list, client_data)
                     continue
-
-        
-##        for write_socket in write_sockets:
-##            client_zipCode = client_data[write_socket][1]
-##            all_events = db.request_events(client_zipCode)
-##            msg = f"\nFrom Client->"
-            
+                
 
 def process_client_request(client_request: "request from client application", client_data: "Client Dictionary",
                          read_socket: "client socket") -> str:
     ''' parse client request and decide on action to take '''
     request_data = client_request.split()
     
-    if request_data[1] == "ALL":
+    if request_data[1] == "GOTO":
+        db.add_zipcode(request_data[0])
+    elif request_data[1] == "ALL":
         return get_events(request_data[0])
     elif request_data[1] == "POST":
         return post_event(request_data[0], request_data[2])
-    
+    elif request_data[1] == "GET":
+        return get_allMessage(request_data[0], request_data[2])
     else:
-        # Message System -> User has to attached to a zipcode and event in order to send message to the system
-        pass
-
+        print(request_data)
 
 
 def get_events(zip_code: str) -> str:
     ''' gather all events as a list and return as server_response '''
-    return db.request_events(zip_code)
+    event_list = db.request_events(zip_code)
+    return json.dumps(event_list)
+
 
 def post_event(zip_code: str, event_name: str) -> str:
     ''' post new event to database '''
@@ -83,7 +85,17 @@ def post_event(zip_code: str, event_name: str) -> str:
         return f"\n{event_name} Added in {zip_code}!\n"
     except server_database.EventAlreadyExist:
         return f"\n{event_name} in {zip_code}... Already Exist!\n"
-        
+
+def get_allMessage(zip_code: str, event: str) -> str:
+    try:
+        list_msg = db.request_messages(zip_code, event)
+        if list_msg == []:
+            return f"There are no current messages in this -> '{event}'"
+        else:
+            return "".join(f"\n{i+1}.) {list_msg[i]}\n" for i in range(len(list_msg)))
+    except KeyError:
+        return "NO_EVENT"
+
 
 def server_recv_client(server_socket: socket.socket, client_data: 'client dictionary', socket_list: 'list of all sockets') -> None:
     ''' server accepts client connection and stores client information '''
