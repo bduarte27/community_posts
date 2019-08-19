@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-class ObjectAlreadyExist(Exception):
+class EventAlreadyExist(Exception):
     pass
 
 class Database_Manager:

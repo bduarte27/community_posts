@@ -6,11 +6,11 @@ import server_database
 SERVER_IP = socket.gethostbyname(socket.gethostname())
 PUBLIC_IP = '71.204.145.90'
 SERVER_PORT = 8000
-db = server_database.Database_Manager()
 
 
 def run_server():
     global socket
+    db = server_database.Database_Manager()
     
     # create server socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,7 +19,7 @@ def run_server():
     # list of all sockets: server + clients
     socket_list = [server_socket]
 
-    # Key = client socket object, Value = (Username, Zipcode)
+    # key = client socket, value = client username
     client_data = {}
 
     # keep server running
@@ -31,23 +31,22 @@ def run_server():
 
         # respond to sockets with recieved data
         for read_socket in read_sockets:
-            # accept and save new connections to socket_list and client_dictionary
+            # accept and save new connections to socket_list and client_data
             if read_socket == server_socket:
-                client_socket, client_address = server_socket.accept()
-                clientInfo_recv(client_socket, client_data, socket_list)
+                server_recv_client(server_socket, client_data, socket_list)
                 
             else:
                 try:
-                    message = read_socket.recv(1024).decode('utf-8')
+                    client_request = read_socket.recv(1024).decode('utf-8')
                     # I don't think this is needed anymore with the current Client right now
-                    if len(message) == 0:
-                        close_clientLine(read_socket, socket_list, client_data)
+                    if len(client_request) == 0:
+                        close_client(read_socket, socket_list, client_data)
                         continue
-                    print(clientCommands_RCVed(message, client_data, read_socket))
+                    print(process_client_request(client_request, client_data, read_socket))
 
                     
                 except ConnectionResetError:
-                    close_clientLine(read_socket, socket_list, client_data)
+                    close_client(read_socket, socket_list, client_data)
                     continue
 
         
@@ -57,15 +56,15 @@ def run_server():
 ##            msg = f"\nFrom Client->"
             
 
-def clientCommands_RCVed(client_command: "Client Input", client_data: "Client Dictionary",
-                         read_socket: "Client's Socket") -> str:
-    ''' '''
-    message_data = client_command.split()
+def process_client_request(client_request: "request from client application", client_data: "Client Dictionary",
+                         read_socket: "client socket") -> str:
+    ''' parse client request and decide on action to take '''
+    request_data = client_request.split()
     
-    if message_data[1] == "ALL":
-        return get_ALLEvents(message_data[0])
-    elif message_data[1] == "POST":
-        return post_Event(message_data[0], message_data[2])
+    if request_data[1] == "ALL":
+        return get_events(request_data[0])
+    elif request_data[1] == "POST":
+        return post_event(request_data[0], request_data[2])
     
     else:
         # Message System -> User has to attached to a zipcode and event in order to send message to the system
@@ -73,37 +72,30 @@ def clientCommands_RCVed(client_command: "Client Input", client_data: "Client Di
 
 
 
-def get_ALLEvents(zip_code: str) -> str:
-    ''' get all Events as str and return as msg '''
-    allEvents = db.request_events(zip_code)
-    if allEvents != []:
-        msg = "".join(f"\n{i+1}.) {allEvents[i]}\n" for i in range(len(allEvents)))
-        return msg
-    else:
-        return f"\nNo Events exist in this current ZipCode -> {zip_code}\n"
+def get_events(zip_code: str) -> str:
+    ''' gather all events as a list and return as server_response '''
+    return db.request_events(zip_code)
 
-
-def post_Event(zip_code: str, event_name: str) -> str:
-    ''' Post Event on the DB -> Creating a meessage of completion '''
+def post_event(zip_code: str, event_name: str) -> str:
+    ''' post new event to database '''
     try:
         db.add_event(zip_code, event_name)
         return f"\n{event_name} Added in {zip_code}!\n"
-    except server_database.ObjectAlreadyExist:
+    except server_database.EventAlreadyExist:
         return f"\n{event_name} in {zip_code}... Already Exist!\n"
         
 
-def clientInfo_recv(client_socket: "Client's socket connection", client_data: 'Client Dictionary',
-                    socket_list: "List of Sockets") -> None:
-    ''' Server Receives client information and add it to its connection '''
+def server_recv_client(server_socket: socket.socket, client_data: 'client dictionary', socket_list: 'list of all sockets') -> None:
+    ''' server accepts client connection and stores client information '''
+    client_socket, client_address = server_socket.accept()
     user_data = client_socket.recv(1024).decode('utf-8')
-    user_name = user_data
     socket_list.append(client_socket)
-    client_data[client_socket] = user_name
+    client_data[client_socket] = user_data
     
 
-def close_clientLine(client_socket: "Client's socket", socket_list: 'list of socket',
-                     client_dictionary: 'dictionary of users'):
-    ''' Close the connection to the client and delete user_data info '''
+def close_client(client_socket: socket.socket, socket_list: 'list of all sockets',
+                     client_data: 'client dictionary'):
+    ''' close connection to client by removing from socket_list and client_dictionary '''
     print(f"Closing the socket for -> {client_dictionary[client_socket]}")
     socket_list.remove(client_socket)
     del client_dictionary[client_socket]
