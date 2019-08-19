@@ -44,11 +44,7 @@ def run_server():
                         close_client(read_socket, socket_list, client_data)
                         continue
 
-                    response = process_client_request(client_request, client_data, read_socket)
-
-                    for write_socket in write_sockets:
-                        if write_socket == read_socket:
-                            write_socket.send(response.encode('utf-8'))
+                    process_client_request(client_request, client_data, read_socket)
                     
                 except ConnectionResetError:
                     close_client(read_socket, socket_list, client_data)
@@ -56,27 +52,31 @@ def run_server():
                 
 
 def process_client_request(client_request: "request from client application", client_data: "Client Dictionary",
-                         read_socket: "client socket") -> str:
+                         client_socket: "client socket"):
     ''' parse client request and decide on action to take '''
     request_data = client_request.split()
  
     if request_data[1] == "GOTO":
         db.add_zipcode(request_data[0])
-        return f"Location: {request_data[0]} connected!"
+
     elif request_data[1] == "ALL":
-        return get_events(request_data[0])
+        all_events = get_events(request_data[0])
+        client_socket.send(all_events.encode('utf-8'))
+
     elif request_data[1] == "POST":
-        return post_event(request_data[0], request_data[2])
+        notification = post_event(request_data[0], request_data[2])
+        client_socket.send(notification.encode('utf-8'))
+
     elif request_data[1] == "GET":
-        return get_messages(request_data[0], request_data[2], int(request_data[3]))
+        all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
+        client_socket.send(all_messages.encode('utf-8'))
+        
     elif request_data[1] == "MESSAGES":
-        print(request_data[3])
         message_list = request_data[4:]
         msg = " ".join(f"{i}" for i in message_list)
         db.add_message(request_data[0], request_data[2], msg)
-        return get_messages(request_data[0], request_data[2], int(request_data[3]))
-    else:
-        pass
+        all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
+        client_socket.send(all_messages.encode('utf-8'))
 
 
 def get_events(zip_code: str) -> str:
@@ -97,7 +97,6 @@ def get_messages(zip_code: str, event: str, number_of_messages: int) -> str:
     try:
         msg_list = db.request_messages(zip_code, event, number_of_messages)
         return json.dumps(msg_list)
-    
     except KeyError:
         return "NO_EVENT"
 
