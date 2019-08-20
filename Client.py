@@ -102,7 +102,7 @@ def messaging_mode(client_socket: socket.socket, client_info):
         return
 
     message_list = json.loads(data_str)
-    print_alLMessages_or_allEvents(message_list, "Messages")
+    pretty_print_all_messages(message_list, "Messages")
     client_info['num_of_messages'] = len(message_list)
 
     print(f"Welcome to the {client_info['event']} event message board")
@@ -126,20 +126,20 @@ def messaging_mode(client_socket: socket.socket, client_info):
 
         # client sends user message and request to server to see if new messages present for this event at same time
         client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {message_info}".encode('utf-8'))
-        message_list = json.loads(client_socket.recv(1024).decode('utf-8'))      
+        message_info_list = json.loads(client_socket.recv(1024).decode('utf-8'))      
 
-        print_alLMessages_or_allEvents(message_list, "Messages")
-        client_info['num_of_messages'] += len(message_list)
+        pretty_print_all_messages(message_info_list, "Messages")
+        client_info['num_of_messages'] += len(message_info_list)
 
 
-def print_alLMessages_or_allEvents(theList: [str], print_str: str) -> None:
-    ''' '''
+def pretty_print_all_messages(print_content: [], print_str: str):
+    ''' prints print_content list in a nicer format '''
     print()
-    if theList == []:
+    if print_content == []:
         print(f"There are currently no available {print_str}!")
     else:
         print(f"Here are the available {print_str}: ")
-        for i in theList:
+        for i in print_content:
             print(i)
     print()
 
