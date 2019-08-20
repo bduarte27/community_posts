@@ -1,3 +1,4 @@
+from datetime import datetime 
 import socket
 import select
 import json
@@ -20,7 +21,7 @@ def run_client():
     global socket
     running = True
 
-    client_info = {'username': '', 'zipcode': '', 'event': '', 'num_of_messages': 0, 'time': 0}
+    client_info = {'username': '', 'zipcode': '', 'event': '', 'num_of_messages': 0}
     
     client_socket = socket.socket()
 
@@ -119,7 +120,9 @@ def messaging_mode(client_socket: socket.socket, client_info):
         if response.strip() == "":
             continue
         
-        message_info = [response, client_info['time']]
+        utc_now = datetime.utcnow()
+        utc_now_str = f"{utc_now}"
+        message_info = [response, utc_now_str]
 
         # client sends user message and request to server to see if new messages present for this event at same time
         client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {message_info}".encode('utf-8'))
@@ -127,9 +130,6 @@ def messaging_mode(client_socket: socket.socket, client_info):
 
         print_alLMessages_or_allEvents(message_list, "Messages")
         client_info['num_of_messages'] += len(message_list)
-
-        # delete this later -> just for testing
-        client_info['time'] += 1
 
 
 def print_alLMessages_or_allEvents(theList: [str], print_str: str) -> None:
