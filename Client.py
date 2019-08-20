@@ -20,7 +20,7 @@ def run_client():
     global socket
     running = True
 
-    client_info = {'username': '', 'zipcode': '', 'event': '', 'num_of_messages': 0}
+    client_info = {'username': '', 'zipcode': '', 'event': '', 'num_of_messages': 0, 'time': 0}
     
     client_socket = socket.socket()
 
@@ -118,12 +118,17 @@ def messaging_mode(client_socket: socket.socket, client_info):
         if response.strip() == "":
             continue
         
-        # client sends request to server to see if new messages present for this event
-        client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {response}".encode('utf-8'))
+        message_info = (response, client_info['time'])
+
+        # client sends user message and request to server to see if new messages present for this event at same time
+        client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {message_info}".encode('utf-8'))
         message_list = json.loads(client_socket.recv(1024).decode('utf-8'))      
 
         print(message_list)
         client_info['num_of_messages'] += len(message_list)
+
+        # delete this later -> just for testing
+        client_info['time'] += 1
 
 
 

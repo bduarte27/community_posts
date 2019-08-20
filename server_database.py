@@ -57,13 +57,18 @@ class Database_Manager:
         
 
         
-    def add_message(self, zip_code: str, event: str, message: str) -> None:
-        ''' Add Message in the json Database '''
+    def add_message(self, zip_code: str, event: str, message_info: tuple) -> None:
+        ''' Add message_info of format [message, time] to json Database '''
         file_path = Path("DB") / Path(f"{zip_code}.json")
-        
         json_object = self._load_data(file_path)
 
-        json_object[event].append(message)
+        i = len(json_object[event])
+        for stored_message_info in reversed(json_object[event]):
+            if stored_message_info[1] <= message_info[1]:
+                break
+            i -= 1
+
+        json_object[event].insert(i, message_info)
 
         self._dump_data(file_path, json_object)
 

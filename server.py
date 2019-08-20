@@ -49,7 +49,6 @@ def run_server():
                 except ConnectionResetError:
                     close_client(read_socket, socket_list, client_data)
                     continue
-                
 
 def process_client_request(client_request: "request from client application", client_data: "Client Dictionary",
                          client_socket: "client socket"):
@@ -72,15 +71,14 @@ def process_client_request(client_request: "request from client application", cl
         client_socket.send(all_messages.encode('utf-8'))
         
     elif request_data[1] == "MESSAGES":
-        message_list = request_data[4:]
-        msg = " ".join(message_list)
-
-        # add message to database
-        db.add_message(request_data[0], request_data[2], msg)
+        message_data = request_data[4:]
+        # risky eval call!(maybe json loads it), message_tuple = (message, time)
+        message_info = eval(" ".join(message_data))
+        db.add_message(request_data[0], request_data[2], message_info)
 
         # send new messages back to client
-        all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
-        client_socket.send(all_messages.encode('utf-8'))
+        all_message_tuples = get_messages(request_data[0], request_data[2], int(request_data[3]))
+        client_socket.send(all_message_tuples.encode('utf-8'))
 
 
 def get_events(zip_code: str) -> str:
