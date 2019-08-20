@@ -76,8 +76,20 @@ def event_mode(client_socket: socket.socket, client_info):
             print(client_socket.recv(1024).decode('utf-8'))
 
         elif response[:3] == 'GET':
+
+            # send request for messages from specified event
+            client_socket.send(f"{client_info['zipcode']} GET {response[4:]}".encode('utf-8'))
+            data_str = client_socket.recv(1024).decode('utf-8')
+
+            if data_str == "NO_EVENT":
+                print(f"\nThis Event: '{response[4:]}' does not exist!")
+                continue
+            
             # client will now move to messaging mode
             client_info['event'] = response[4:]
+            message_info_list = json.loads(data_str)
+            client_info['num_of_messages'] = len(message_info_list)
+            pretty_print_all_messages(message_info_list, "Messages")
             break
 
         elif response == 'BACK':
@@ -91,20 +103,6 @@ def messaging_mode(client_socket: socket.socket, client_info):
     1.) keep client updated with messages
     2.) allow client to send messages OR return to event mode
     """
-    # send request for messages from specified event
-    client_socket.send(f"{client_info['zipcode']} GET {client_info['event']} {client_info['num_of_messages']}".encode('utf-8'))
-    data_str = client_socket.recv(1024).decode('utf-8')
-    
-    if data_str == "NO_EVENT":
-        print(f"\nThis Event: '{client_info['event']}' does not exist! Going back to event mode!")
-        client_info['event'] = ''
-        client_info['num_of_messages'] = 0
-        return
-
-    message_list = json.loads(data_str)
-    pretty_print_all_messages(message_list, "Messages")
-    client_info['num_of_messages'] = len(message_list)
-
     print(f"Welcome to the {client_info['event']} event message board")
     print('Type BACK to return to event mode any time\n')
     # Print out all messages from specified event catalogue -> message_list size will vary, need make repetitive reads later

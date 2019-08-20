@@ -1,7 +1,10 @@
-import json
 from pathlib import Path
+import json
 
 class EventAlreadyExist(Exception):
+    pass
+
+class EventDoesNotExist(Exception):
     pass
 
 class Database_Manager:
@@ -20,15 +23,22 @@ class Database_Manager:
 
         return events
 
+    def request_event(self, zipcode: str, event_name: str) -> 'list of message_info':
+        ''' Get event by returning messages associated with it '''
+        file_path = Path("DB") / Path(f"{zipcode}.json")
+        json_object = self._load_data(file_path)
 
-    def request_messages(self, zip_code: str, event: str, number_of_messages: int) -> [str]:
-        ''' Return list of messages associated with the zipcode and event '''
         try:
-            file_path = Path("DB") / Path(f"{zip_code}.json")
-            json_object = self._load_data(file_path)
-            return json_object[event][number_of_messages:]
+            return json_object[event_name]
         except KeyError:
-            raise KeyError
+            raise EventDoesNotExist
+
+
+    def request_messages(self, zip_code: str, event: str, number_of_messages: int) -> 'list of message_info':
+        ''' Return list of messages associated with the zipcode and event '''
+        file_path = Path("DB") / Path(f"{zip_code}.json")
+        json_object = self._load_data(file_path)
+        return json_object[event][number_of_messages:]
 
             
     # Code for updating the database

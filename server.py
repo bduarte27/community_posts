@@ -1,4 +1,4 @@
-from server_database import Database_Manager, EventAlreadyExist
+from server_database import Database_Manager, EventAlreadyExist, EventDoesNotExist
 import socket
 import select
 import json
@@ -55,9 +55,11 @@ def process_client_request(client_request: "request from client application", cl
     ''' parse client request and decide on action to take '''
     request_data = client_request.split()
  
+ ####       RESPOND TO CLIENT IN ZIPCODE MODE      ####
     if request_data[1] == "GOTO":
         db.add_zipcode(request_data[0])
 
+####        RESPOND TO CLIENT IN EVENT MODE        ####
     elif request_data[1] == "ALL":
         all_events = get_events(request_data[0])
         client_socket.send(all_events.encode('utf-8'))
@@ -67,9 +69,10 @@ def process_client_request(client_request: "request from client application", cl
         client_socket.send(notification.encode('utf-8'))
 
     elif request_data[1] == "GET":
-        all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
-        client_socket.send(all_messages.encode('utf-8'))
+        all_message_info_str = get_event(request_data[0], request_data[2])
+        client_socket.send(all_message_info_str.encode('utf-8'))
         
+####        RESPOND TO CLIENT IN MESSAGE MODE       ####
     elif request_data[1] == "MESSAGES":
         message_data = request_data[4:]
         # risky eval call!(maybe json loads it), message_info = [message, time]
@@ -81,8 +84,8 @@ def process_client_request(client_request: "request from client application", cl
         db.add_message(request_data[0], request_data[2], message_info)
 
         # send new messages back to client
-        all_message_tuples = get_messages(request_data[0], request_data[2], int(request_data[3]))
-        client_socket.send(all_message_tuples.encode('utf-8'))
+        all_message_info_str = get_messages(request_data[0], request_data[2], int(request_data[3]))
+        client_socket.send(all_message_info_str.encode('utf-8'))
 
 
 def get_events(zip_code: str) -> str:
@@ -99,12 +102,17 @@ def post_event(zip_code: str, event_name: str) -> str:
     except EventAlreadyExist:
         return f"\n{event_name} in {zip_code}... Already Exist!\n"
 
-def get_messages(zip_code: str, event: str, number_of_messages: int) -> str:
+def get_event(zipcode: str, event_name: str) -> 'list of message_info':
+    ''' Return message_info list '''
     try:
-        msg_list = db.request_messages(zip_code, event, number_of_messages)
-        return json.dumps(msg_list)
-    except KeyError:
+        message_info_list = db.request_event(zipcode, event_name)
+        return json.dumps(message_info_list)
+    except EventDoesNotExist:
         return "NO_EVENT"
+
+def get_messages(zip_code: str, event: str, number_of_messages: int) -> str:
+    msg_list = db.request_messages(zip_code, event, number_of_messages)
+    return json.dumps(msg_list)
 
 
 def server_recv_client(server_socket: socket.socket, client_data: 'client dictionary', socket_list: 'list of all sockets') -> None:
