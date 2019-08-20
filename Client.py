@@ -96,13 +96,9 @@ def messaging_mode(client_socket: socket.socket, client_info):
         client_info['num_of_messages'] = 0
         return
 
-    messagesList = json.loads(data_str)
-    print("\n",messagesList, "\n")
-    client_info['num_of_messages'] = len(messagesList)
-
-    
-
-
+    message_list = json.loads(data_str)
+    print("\n",message_list, "\n")
+    client_info['num_of_messages'] = len(message_list)
 
     print(f"Welcome to the {client_info['event']} event message board")
     print('Type BACK to return to event mode any time')
@@ -117,13 +113,12 @@ def messaging_mode(client_socket: socket.socket, client_info):
             client_info['num_of_messages'] = 0
             break
         
-        # client must wait till server returns message_list
-
+        # client sends request to server to see if new messages present for this event
         client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {response}".encode('utf-8'))
+        message_list = json.loads(client_socket.recv(1024).decode('utf-8'))      
 
-        messageList = json.loads(client_socket.recv(1024).decode('utf-8'))      
-        print(messageList)
-        client_info['num_of_messages'] += len(messageList)
+        print(message_list)
+        client_info['num_of_messages'] += len(message_list)
 
 
 

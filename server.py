@@ -39,7 +39,7 @@ def run_server():
             else:
                 try:
                     client_request = read_socket.recv(1024).decode('utf-8')
-                    # I don't think this is needed anymore with the current Client right now
+
                     if len(client_request) == 0:
                         close_client(read_socket, socket_list, client_data)
                         continue
@@ -73,9 +73,12 @@ def process_client_request(client_request: "request from client application", cl
         
     elif request_data[1] == "MESSAGES":
         message_list = request_data[4:]
-        user_name = client_data[client_socket] + ": "
-        msg = user_name + " ".join(f"{i}" for i in message_list)
+        msg = " ".join(message_list)
+
+        # add message to database
         db.add_message(request_data[0], request_data[2], msg)
+
+        # send new messages back to client
         all_messages = get_messages(request_data[0], request_data[2], int(request_data[3]))
         client_socket.send(all_messages.encode('utf-8'))
 
