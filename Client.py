@@ -43,9 +43,12 @@ def run_client():
 
 def zipcode_mode(client_info, client_socket):
     ''' Update client_info to have specified zipcode '''
-    client_info['zipcode'] = input("What is your zipcode?: ")
-    client_socket.send(f"{client_info['zipcode']} GOTO".encode('utf-8'))
-    #print(client_socket.recv(1024).decode('utf-8'))
+    while True:
+        zip_code = input("What is your zipcode?: ")
+        if zip_code.strip() != "":
+            client_info['zipcode'] = zip_code
+            client_socket.send(f"{client_info['zipcode']} GOTO".encode('utf-8'))
+            break
 
     
 def event_mode(client_socket: socket.socket, client_info):
@@ -91,7 +94,7 @@ def messaging_mode(client_socket: socket.socket, client_info):
     data_str = client_socket.recv(1024).decode('utf-8')
     
     if data_str == "NO_EVENT":
-        print("Going back to event mode!\n")
+        print(f"\nThis Event: '{client_info['event']}' does not exist! Going back to event mode!\n")
         client_info['event'] = ''
         client_info['num_of_messages'] = 0
         return
@@ -112,6 +115,8 @@ def messaging_mode(client_socket: socket.socket, client_info):
             client_info['event'] = ''
             client_info['num_of_messages'] = 0
             break
+        if response.strip() == "":
+            continue
         
         # client sends request to server to see if new messages present for this event
         client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {response}".encode('utf-8'))
