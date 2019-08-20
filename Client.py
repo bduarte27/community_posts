@@ -53,7 +53,7 @@ def zipcode_mode(client_info, client_socket):
     
 def event_mode(client_socket: socket.socket, client_info):
     ''' Apply one of the specified options described below: ALL, POST, GET, BACK '''
-    print("ALL: to request all events")
+    print("\nALL: to request all events")
     print("POST event_name: where event_name is the name of the event to create a new event post")
     print("GET event_name: where event_name is the name of the event to enter the event_name messaging catalogue")
     print("BACK: to change location\n")
@@ -65,8 +65,9 @@ def event_mode(client_socket: socket.socket, client_info):
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
 
             # print list of events to client -> event_list size will vary, need make repetitive reads later
-            all_events = client_socket.recv(1024).decode('utf-8')
-            print(json.loads(all_events))
+            data = client_socket.recv(1024).decode('utf-8')
+            allEvents = json.loads(data)
+            print_alLMessages_or_allEvents(allEvents, "Events")
 
         elif response[:4] == 'POST':
             # post new event to server at zipcode location
@@ -94,17 +95,17 @@ def messaging_mode(client_socket: socket.socket, client_info):
     data_str = client_socket.recv(1024).decode('utf-8')
     
     if data_str == "NO_EVENT":
-        print(f"\nThis Event: '{client_info['event']}' does not exist! Going back to event mode!\n")
+        print(f"\nThis Event: '{client_info['event']}' does not exist! Going back to event mode!")
         client_info['event'] = ''
         client_info['num_of_messages'] = 0
         return
 
     message_list = json.loads(data_str)
-    print("\n",message_list, "\n")
+    print_alLMessages_or_allEvents(message_list, "Messages")
     client_info['num_of_messages'] = len(message_list)
 
     print(f"Welcome to the {client_info['event']} event message board")
-    print('Type BACK to return to event mode any time')
+    print('Type BACK to return to event mode any time\n')
     # Print out all messages from specified event catalogue -> message_list size will vary, need make repetitive reads later
 
     while True:
@@ -118,18 +119,29 @@ def messaging_mode(client_socket: socket.socket, client_info):
         if response.strip() == "":
             continue
         
-        message_info = (response, client_info['time'])
+        message_info = [response, client_info['time']]
 
         # client sends user message and request to server to see if new messages present for this event at same time
         client_socket.send(f"{client_info['zipcode']} MESSAGES {client_info['event']} {client_info['num_of_messages']} {message_info}".encode('utf-8'))
         message_list = json.loads(client_socket.recv(1024).decode('utf-8'))      
 
-        print(message_list)
+        print_alLMessages_or_allEvents(message_list, "Messages")
         client_info['num_of_messages'] += len(message_list)
 
         # delete this later -> just for testing
         client_info['time'] += 1
 
+
+def print_alLMessages_or_allEvents(theList: [str], print_str: str) -> None:
+    ''' '''
+    print()
+    if theList == []:
+        print(f"There are currently no available {print_str}!")
+    else:
+        print(f"Here are the available {print_str}: ")
+        for i in theList:
+            print(i)
+    print()
 
 
 if __name__ == '__main__':
