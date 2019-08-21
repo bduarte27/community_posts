@@ -68,8 +68,8 @@ def event_mode(client_socket: socket.socket, client_info):
             # print list of events to client -> event_list size will vary, need make repetitive reads later
             data = client_socket.recv(1024).decode('utf-8')
             allEvents = json.loads(data)
-            print_alLMessages_or_allEvents(allEvents, "Events")
-
+            pretty_print_all_messages(allEvents, "Events")
+            
         elif response[:4] == 'POST':
             # post new event to server at zipcode location
             client_socket.send(f"{client_info['zipcode']} {response}".encode('utf-8'))
