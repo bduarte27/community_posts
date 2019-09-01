@@ -2,7 +2,7 @@ from datetime import datetime
 import socket
 import select
 import json
-
+nuts
 server_ip = socket.gethostbyname(socket.gethostname())
 public_ip = '71.204.145.90'
 port = 8000
